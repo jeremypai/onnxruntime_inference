@@ -37,6 +37,11 @@ ONNXRuntimeExecutor_Handle_t *ONNXRuntimeExecutor_Create(const char *modelPath,
   ONNXRuntimeExecutor_Handle_t *executor =
       (ONNXRuntimeExecutor_Handle_t *)malloc(
           sizeof(ONNXRuntimeExecutor_Handle_t));
+  executor->ort = NULL;
+  executor->env = NULL;
+  executor->sessionOptions = NULL;
+  executor->session = NULL;
+  executor->status = NULL;
   executor->inputShape[0] = 1;
   executor->inputShape[1] = channel;
   executor->inputShape[2] = height;
