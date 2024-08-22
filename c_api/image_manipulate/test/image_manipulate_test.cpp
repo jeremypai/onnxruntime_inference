@@ -65,10 +65,9 @@ TEST(ConvertTest, ConvertCHWToHWCAndBack) {
 }
 
 TEST(PNGTest, ReadGrayImageAndSave) {
-  const char *savePath =
-      "/workspaces/onnxruntime_inferece/data/output_gray.png";
+  const char *savePath = "/home/onnxruntime_inferece/data/output_gray.png";
   const char *imagePath =
-      "/workspaces/onnxruntime_inferece/data/test_input_image_gray.png";
+      "/home/onnxruntime_inferece/data/test_input_image_gray.png";
   int width;
   int height;
   unsigned char *image = readGrayImage(imagePath, &width, &height);
@@ -77,10 +76,9 @@ TEST(PNGTest, ReadGrayImageAndSave) {
 }
 
 TEST(PNGTest, ReadColorImageAndSave) {
-  const char *savePath =
-      "/workspaces/onnxruntime_inferece/data/output_color.png";
+  const char *savePath = "/home/onnxruntime_inferece/data/output_color.png";
   const char *imagePath =
-      "/workspaces/onnxruntime_inferece/data/test_input_image_color.png";
+      "/home/onnxruntime_inferece/data/test_input_image_color.png";
   int width;
   int height;
   unsigned char *image = readColorImage(imagePath, &width, &height);

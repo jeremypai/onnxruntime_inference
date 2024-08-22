@@ -1,4 +1,4 @@
-#include "model_executor.h"
+#include "onnxruntime_executor.h"
 
 #include "stdio.h"
 
@@ -31,24 +31,26 @@ void enableCuda(ONNXRuntimeExecutor_Handle_t *executor) {
       executor->sessionOptions, &o);
 }
 
-ONNXRuntimeExecutor_Handle_t *ONNXRuntimeExecutor_Create(const char *modelPath,
-                                                         int width, int height,
-                                                         int channel) {
+ONNXRuntimeExecutor_Handle_t *
+ONNXRuntimeExecutor_Create(const char *modelPath, const char **inputNames,
+                           const char **outputNames, int outputHeight,
+                           int outputWidth, int outputChannel, int inputHeight,
+                           int inputWidth, int inputChannel) {
   ONNXRuntimeExecutor_Handle_t *executor =
       (ONNXRuntimeExecutor_Handle_t *)malloc(
           sizeof(ONNXRuntimeExecutor_Handle_t));
-  executor->ort = NULL;
-  executor->env = NULL;
-  executor->sessionOptions = NULL;
-  executor->session = NULL;
-  executor->status = NULL;
+  executor->inputNames = inputNames;
+  executor->outputNames = outputNames;
   executor->inputShape[0] = 1;
-  executor->inputShape[1] = channel;
-  executor->inputShape[2] = height;
-  executor->inputShape[3] = width;
+  executor->inputShape[1] = inputChannel;
+  executor->inputShape[2] = inputHeight;
+  executor->inputShape[3] = inputWidth;
   executor->inputShapeLen =
       sizeof(executor->inputShape) / sizeof(executor->inputShape[0]);
-  executor->modelInputLen = width * height * channel * sizeof(float);
+  executor->modelInputLen =
+      inputHeight * inputWidth * inputChannel * sizeof(float);
+  executor->modelOutputLen =
+      outputHeight * outputWidth * outputChannel * sizeof(float);
 
   // init ONNX Runtime engine
   executor->ort = OrtGetApiBase()->GetApi(ORT_API_VERSION);
@@ -123,7 +125,7 @@ void ONNXRuntimeExecutor_Delete(ONNXRuntimeExecutor_Handle_t **executor) {
 }
 
 int ONNXRuntimeExecutor_Inference(ONNXRuntimeExecutor_Handle_t *executor,
-                                  float **outputData, float *inputData) {
+                                  float *outputData, float *inputData) {
   OrtMemoryInfo *memoryInfo;
   executor->status = executor->ort->CreateCpuMemoryInfo(
       OrtArenaAllocator, OrtMemTypeDefault, &memoryInfo);
@@ -155,11 +157,10 @@ int ONNXRuntimeExecutor_Inference(ONNXRuntimeExecutor_Handle_t *executor,
   executor->ort->ReleaseMemoryInfo(memoryInfo);
 
   OrtValue *outputTensor = NULL;
-  static const char *inputNames[] = {"input"};
-  static const char *outputNames[] = {"output"};
-  executor->status = executor->ort->Run(executor->session, NULL, inputNames,
-                                        (const OrtValue *const *)&inputTensor,
-                                        1, outputNames, 1, &outputTensor);
+  executor->status = executor->ort->Run(
+      executor->session, NULL, (const char *const *)executor->inputNames,
+      (const OrtValue *const *)&inputTensor, 1,
+      (const char *const *)executor->outputNames, 1, &outputTensor);
   if (ONNXRuntime_Status_Check(executor)) {
     printf("ONNXRuntimeExecutor_Inference fail: inference fail\n");
     return 1;
@@ -181,7 +182,7 @@ int ONNXRuntimeExecutor_Inference(ONNXRuntimeExecutor_Handle_t *executor,
     return 1;
   }
 
-  *outputData = outputTensorData;
+  memcpy(outputData, outputTensorData, executor->modelOutputLen);
 
   executor->ort->ReleaseValue(outputTensor);
   executor->ort->ReleaseValue(inputTensor);
