@@ -7,3 +7,6 @@
     * The CMake setting would automatically extract those libraries to build folder
 + Set paths of model for inference
 + Set paths of input image for model to do inference
+
+## Profiling
++ Valgrind: a tool to detect memory related issues
